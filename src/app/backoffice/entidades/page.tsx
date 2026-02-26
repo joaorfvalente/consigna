@@ -4,6 +4,26 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Entity } from "@/types/entity";
 import Link from "next/link";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableEmptyState,
+  DataTableHead,
+  DataTableHeader,
+  DataTableRow,
+} from "@/components/ui/data-table";
+import { Button } from "@/components/ui/button";
+import { PageTemplate } from "@/components/templates/PageTemplate";
+import { FISCAL_YEAR_OPTIONS } from "@/lib/constants";
 
 export default function BackofficeEntidadesPage() {
   const [entities, setEntities] = useState<Entity[]>([]);
@@ -39,83 +59,76 @@ export default function BackofficeEntidadesPage() {
   }, [year, search]);
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-stone-900">Entidades</h1>
-      <p className="mt-1 text-stone-600">
-        Gerir e enriquecer dados das entidades elegíveis
-      </p>
-
-      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center">
-        <input
+    <PageTemplate
+      title="Entidades"
+      description="Gerir e enriquecer dados das entidades elegíveis"
+    >
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <Input
           type="text"
           placeholder="Pesquisar por nome..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="rounded-lg border border-stone-300 px-3 py-2 text-stone-900 sm:w-64"
+          className="sm:w-72"
         />
-        <select
-          value={year}
-          onChange={(e) => setYear(parseInt(e.target.value, 10))}
-          className="rounded-lg border border-stone-300 px-3 py-2 text-stone-900"
+        <Select
+          value={String(year)}
+          onValueChange={(value) => setYear(parseInt(value, 10))}
         >
-          {[2025, 2024, 2023].map((y) => (
-            <option key={y} value={y}>
-              {y}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Ano" />
+          </SelectTrigger>
+          <SelectContent>
+            {FISCAL_YEAR_OPTIONS.map((fiscalYear) => (
+              <SelectItem key={fiscalYear} value={String(fiscalYear)}>
+                {fiscalYear}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {loading ? (
-        <p className="mt-8 text-stone-500">A carregar…</p>
+        <p className="text-muted-foreground">A carregar…</p>
       ) : (
-        <div className="mt-6 overflow-hidden rounded-lg border border-stone-200 bg-white">
-          <table className="min-w-full text-sm">
-            <thead className="bg-stone-50">
-              <tr>
-                <th className="px-4 py-3 text-left font-medium text-stone-700">
-                  NIPC
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-stone-700">
-                  Nome
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-stone-700">
-                  Localidade
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-stone-700">
-                  Tipo
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-stone-700">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {entities.map((e) => (
-                <tr key={e.id} className="border-t border-stone-100">
-                  <td className="px-4 py-3 font-mono text-stone-600">{e.nif}</td>
-                  <td className="px-4 py-3 text-stone-900">{e.name}</td>
-                  <td className="px-4 py-3 text-stone-600">{e.county ?? "-"}</td>
-                  <td className="px-4 py-3 text-stone-600">{e.type ?? "-"}</td>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/backoffice/entidades/${e.id}`}
-                      className="text-emerald-600 hover:underline"
-                    >
-                      Editar
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {entities.length === 0 && (
-            <p className="px-4 py-8 text-center text-stone-500">
-              Nenhuma entidade encontrada. Faça upload de um CSV primeiro.
-            </p>
-          )}
-        </div>
+        <DataTable>
+          <DataTableHeader>
+            <DataTableRow>
+              <DataTableHead>NIPC</DataTableHead>
+              <DataTableHead>Nome</DataTableHead>
+              <DataTableHead>Localidade</DataTableHead>
+              <DataTableHead>Tipo</DataTableHead>
+              <DataTableHead>Ações</DataTableHead>
+            </DataTableRow>
+          </DataTableHeader>
+          <DataTableBody>
+            {entities.map((e) => (
+              <DataTableRow key={e.id}>
+                <DataTableCell className="font-mono text-muted-foreground">
+                  {e.nif}
+                </DataTableCell>
+                <DataTableCell>{e.name}</DataTableCell>
+                <DataTableCell className="text-muted-foreground">
+                  {e.county ?? "-"}
+                </DataTableCell>
+                <DataTableCell className="text-muted-foreground">
+                  {e.type ?? "-"}
+                </DataTableCell>
+                <DataTableCell>
+                  <Button asChild variant="link" size="sm" className="h-auto px-0">
+                    <Link href={`/backoffice/entidades/${e.id}`}>Editar</Link>
+                  </Button>
+                </DataTableCell>
+              </DataTableRow>
+            ))}
+            {entities.length === 0 && (
+              <DataTableEmptyState colSpan={5}>
+                Nenhuma entidade encontrada. Faça upload de um CSV primeiro.
+              </DataTableEmptyState>
+            )}
+          </DataTableBody>
+        </DataTable>
       )}
-    </div>
+    </PageTemplate>
   );
 }

@@ -62,16 +62,16 @@ Na página de importação (ou depois em **Settings** → **Environment Variable
 O Supabase precisa de saber que a tua app em produção é um URL válido para redirecionamentos de autenticação.
 
 1. No Supabase, vai a **Authentication** → **URL Configuration**
-2. Em **Site URL**, coloca o URL da Vercel (ex: `https://consigna.vercel.app`)
+2. Em **Site URL**, coloca o URL da Vercel (ex: `https://consigna-irs.vercel.app`)
 3. Em **Redirect URLs**, adiciona:
-   - `https://consigna.vercel.app/**`
+   - `https://consigna-irs.vercel.app/**`
    - `https://teu-dominio.pt/**` (se usares domínio customizado)
 
 #### 1.5. Deploy
 
 1. Clica em **Deploy**
 2. Aguarda o build (1–3 minutos)
-3. A app fica disponível em `https://teu-projeto.vercel.app`
+3. A app fica disponível em `https://consigna-irs.vercel.app`
 
 ### Domínio customizado (opcional)
 

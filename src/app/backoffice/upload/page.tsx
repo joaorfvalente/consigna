@@ -3,6 +3,27 @@
 import { useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { parseCSV, parseCSVPreview } from "@/lib/csv-parser";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageTemplate } from "@/components/templates/PageTemplate";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHead,
+  DataTableHeader,
+  DataTableRow,
+} from "@/components/ui/data-table";
+import { FISCAL_YEAR_OPTIONS } from "@/lib/constants";
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -31,8 +52,8 @@ export default function UploadPage() {
     [year]
   );
 
-  const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const y = parseInt(e.target.value, 10);
+  const handleYearChange = (value: string) => {
+    const y = parseInt(value, 10);
     setYear(y);
     if (file) {
       const reader = new FileReader();
@@ -74,112 +95,113 @@ export default function UploadPage() {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-stone-900">Upload CSV</h1>
-      <p className="mt-1 text-stone-600">
-        Importar lista de entidades elegíveis do Portal das Finanças
-      </p>
-
-      <div className="mt-8 space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-stone-700">
-            Ano fiscal
-          </label>
-          <select
-            value={year}
-            onChange={handleYearChange}
-            className="mt-1 rounded-lg border border-stone-300 px-3 py-2 text-stone-900"
+    <PageTemplate
+      title="Upload CSV"
+      description="Importar lista de entidades elegíveis do Portal das Finanças"
+      className="space-y-8"
+    >
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Label>Ano fiscal</Label>
+          <Select
+            value={String(year)}
+            onValueChange={handleYearChange}
           >
-            {[2025, 2024, 2023].map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FISCAL_YEAR_OPTIONS.map((fiscalYear) => (
+                <SelectItem key={fiscalYear} value={String(fiscalYear)}>
+                  {fiscalYear}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-stone-700">
-            Ficheiro CSV
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label>Ficheiro CSV</Label>
+          <Input
             type="file"
             accept=".csv,.txt"
             onChange={handleFileChange}
-            className="mt-1 block w-full text-sm text-stone-600 file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-emerald-700 hover:file:bg-emerald-100"
+            className="file:bg-primary/10 file:text-primary file:border-0 file:rounded-md file:px-4 file:py-2"
           />
-          <p className="mt-1 text-xs text-stone-500">
+          <p className="text-xs text-muted-foreground">
             Colunas esperadas: NIPC, Nome, Localidade
           </p>
         </div>
 
         {preview && (
-          <div className="rounded-lg border border-stone-200 bg-white p-4">
-            <h3 className="font-medium text-stone-900">Pré-visualização</h3>
-            {preview.errors.length > 0 && (
-              <div className="mt-2 text-sm text-amber-600">
-                {preview.errors.map((e, i) => (
-                  <p key={i}>{e}</p>
-                ))}
-              </div>
-            )}
-            <p className="mt-2 text-sm text-stone-600">
-              {preview.totalCount.toLocaleString("pt-PT")} entidades encontradas
-              {preview.totalCount > preview.entities.length && (
-                <span className="text-stone-500"> (a mostrar {preview.entities.length})</span>
-              )}
-            </p>
-            <div className="mt-4 max-h-60 overflow-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="border-b border-stone-200">
-                    {preview.headers.slice(0, 5).map((h, i) => (
-                      <th key={i} className="px-2 py-1 text-left font-medium text-stone-700">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {(preview.entities as { nif: string; name: string; county?: string }[]).slice(0, 10).map((e, i) => (
-                    <tr key={i} className="border-b border-stone-100">
-                      <td className="px-2 py-1">{e.nif}</td>
-                      <td className="px-2 py-1">{e.name}</td>
-                      <td className="px-2 py-1">{e.county ?? "-"}</td>
-                    </tr>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Pré-visualização</CardTitle>
+              {preview.errors.length > 0 && (
+                <div className="text-sm text-destructive">
+                  {preview.errors.map((e, i) => (
+                    <p key={i}>{e}</p>
                   ))}
-                </tbody>
-              </table>
-            </div>
-            <button
-              onClick={handleImport}
-              disabled={loading}
-              className="mt-4 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-            >
-              {loading ? "A importar…" : "Importar"}
-            </button>
-          </div>
+                </div>
+              )}
+              <CardDescription>
+                {preview.totalCount.toLocaleString("pt-PT")} entidades encontradas
+                {preview.totalCount > preview.entities.length && (
+                  <span> (a mostrar {preview.entities.length})</span>
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="max-h-60 overflow-auto">
+                <DataTable>
+                  <DataTableHeader>
+                    <DataTableRow>
+                      {preview.headers.slice(0, 5).map((h, i) => (
+                        <DataTableHead key={i}>{h}</DataTableHead>
+                      ))}
+                    </DataTableRow>
+                  </DataTableHeader>
+                  <DataTableBody>
+                    {(preview.entities as { nif: string; name: string; county?: string }[])
+                      .slice(0, 10)
+                      .map((e, i) => (
+                        <DataTableRow key={i}>
+                          <DataTableCell>{e.nif}</DataTableCell>
+                          <DataTableCell>{e.name}</DataTableCell>
+                          <DataTableCell>{e.county ?? "-"}</DataTableCell>
+                        </DataTableRow>
+                      ))}
+                  </DataTableBody>
+                </DataTable>
+              </div>
+              <Button onClick={handleImport} disabled={loading}>
+                {loading ? "A importar…" : "Importar"}
+              </Button>
+            </CardContent>
+          </Card>
         )}
 
         {result && (
-          <div className="rounded-lg border border-stone-200 bg-white p-4">
-            <h3 className="font-medium text-stone-900">Resultado</h3>
-            <p className="mt-2 text-sm text-stone-600">
-              {result.imported} entidades importadas
-            </p>
-            {result.errors.length > 0 && (
-              <div className="mt-2 max-h-32 overflow-auto text-sm text-amber-600">
-                {result.errors.slice(0, 5).map((e, i) => (
-                  <p key={i}>{e}</p>
-                ))}
-                {result.errors.length > 5 && (
-                  <p>… e mais {result.errors.length - 5} erros</p>
-                )}
-              </div>
-            )}
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Resultado</CardTitle>
+              <CardDescription>
+                {result.imported} entidades importadas
+              </CardDescription>
+              {result.errors.length > 0 && (
+                <div className="max-h-32 overflow-auto text-sm text-destructive">
+                  {result.errors.slice(0, 5).map((e, i) => (
+                    <p key={i}>{e}</p>
+                  ))}
+                  {result.errors.length > 5 && (
+                    <p>… e mais {result.errors.length - 5} erros</p>
+                  )}
+                </div>
+              )}
+            </CardHeader>
+          </Card>
         )}
       </div>
-    </div>
+    </PageTemplate>
   );
 }

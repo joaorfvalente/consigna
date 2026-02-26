@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useRef } from "react";
 import { searchAddress } from "@/lib/geocoding";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface LocationEditorProps {
   address: string;
@@ -52,31 +54,32 @@ export function LocationEditor({
 
   return (
     <div className="mt-2 space-y-2">
-      <input
+      <Input
         type="text"
         placeholder="Pesquisar morada (ex: Rua das Flores, Lisboa)..."
         value={query !== "" ? query : address}
         onChange={(e) => handleInputChange(e.target.value)}
-        className="w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-900"
       />
-      {loading && <p className="text-sm text-stone-500">A pesquisar…</p>}
+      {loading && <p className="text-sm text-muted-foreground">A pesquisar…</p>}
       {suggestions.length > 0 && (
-        <ul className="rounded-lg border border-stone-200 bg-white py-1 shadow">
+        <ul className="rounded-lg border bg-card py-1 shadow-sm">
           {suggestions.map((s, i) => (
             <li key={i}>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => selectSuggestion(s)}
-                className="w-full px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-50"
+                className="h-auto w-full justify-start px-3 py-2 text-left text-sm whitespace-normal"
               >
                 {s.display_name}
-              </button>
+              </Button>
             </li>
           ))}
         </ul>
       )}
       {address && (latitude != null || longitude != null) && (
-        <p className="text-sm text-stone-500">
+        <p className="text-sm text-muted-foreground">
           Localização definida. Coordenadas guardadas automaticamente.
         </p>
       )}

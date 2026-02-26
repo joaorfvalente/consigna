@@ -1,51 +1,58 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/ui/page-header";
+import { FAQ } from "@/components/FAQ";
+import { Search, MapPin } from "lucide-react";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-stone-50">
-      <header className="border-b border-stone-200 bg-white">
-        <div className="mx-auto max-w-4xl px-4 py-6">
-          <h1 className="text-2xl font-semibold text-stone-900">
-            Consignação IRS
-          </h1>
-          <p className="mt-1 text-stone-600">
-            Encontre e escolha uma instituição para consignar 1% do seu IRS
-          </p>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-4xl px-4 py-12">
-        <div className="rounded-xl border border-stone-200 bg-white p-8 shadow-sm">
-          <h2 className="text-lg font-medium text-stone-900">
-            Como funciona a consignação?
-          </h2>
-          <p className="mt-3 text-stone-600">
-            A consignação permite doar 1% do IRS liquidado a uma instituição de
-            solidariedade social, cultural ou ambiental em vez de entregar ao
-            Estado. É totalmente gratuito e não afeta o valor do seu reembolso.
-          </p>
-
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-            <Link
-              href="/entidades"
-              className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-6 py-3 font-medium text-white transition hover:bg-emerald-700"
-            >
+    <main className="min-h-screen bg-muted/30">
+      <PageHeader
+        title="Uma forma fácil de ajudar quem tanto ajuda."
+        description="A consignação do IRS permite-lhe destinar 1% do seu imposto a uma instituição de solidariedade, cultural ou ambiental, em vez de o entregar ao Estado. É um processo totalmente gratuito e não afeta o valor do seu reembolso."
+        topContent={
+          <Badge variant="secondary" className="mb-4">
+            Consignar IRS
+          </Badge>
+        }
+        className="bg-transparent"
+        contentClassName="mx-auto max-w-4xl px-4 py-10 sm:py-12"
+        titleClassName="max-w-2xl text-4xl font-bold sm:text-5xl"
+        descriptionClassName="mt-4 max-w-xl text-lg"
+      >
+        <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+          <Button asChild size="lg" className="min-h-12 px-8">
+            <Link href="/entidades">
+              <Search className="size-5" />
               Procurar instituições
             </Link>
-            <Link
-              href="/entidades/mapa"
-              className="inline-flex items-center justify-center rounded-lg border border-stone-300 bg-white px-6 py-3 font-medium text-stone-700 transition hover:bg-stone-50"
-            >
+          </Button>
+          <Button asChild variant="outline" size="lg" className="min-h-12 px-8">
+            <Link href="/entidades/mapa">
+              <MapPin className="size-5" />
               Ver no mapa
             </Link>
-          </div>
+          </Button>
         </div>
+      </PageHeader>
 
-        <p className="mt-8 text-center text-sm text-stone-500">
-          <Link href="/backoffice" className="underline hover:text-stone-700">
-            Acesso backoffice
-          </Link>
-        </p>
+      <div className="w-full border-t border-border" />
+
+      <FAQ />
+
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground">
+              Dados da lista oficial da Autoridade Tributária e Aduaneira
+            </p>
+            <Link
+              href="/backoffice"
+              className="text-sm text-muted-foreground underline hover:text-foreground"
+            >
+              Acesso backoffice
+            </Link>
+          </div>
       </div>
     </main>
   );

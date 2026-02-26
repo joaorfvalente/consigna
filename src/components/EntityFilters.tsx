@@ -1,6 +1,16 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Search, X } from "lucide-react";
 
 interface EntityFiltersProps {
   search?: string;
@@ -9,6 +19,7 @@ interface EntityFiltersProps {
   year?: string;
   counties: string[];
   types: string[];
+  variant?: "default" | "hero";
 }
 
 export function EntityFilters({
@@ -18,6 +29,7 @@ export function EntityFilters({
   year,
   counties,
   types,
+  variant = "default",
 }: EntityFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -34,11 +46,22 @@ export function EntityFilters({
     router.push(`/entidades?${params.toString()}`);
   }
 
-  const currentYear = new Date().getFullYear();
+  function clearFilters() {
+    router.push("/entidades");
+  }
+
+  const yearValue = year ? parseInt(year, 10) : new Date().getFullYear();
+  const hasActiveFilters = search || county || type;
+  const yearOptions = [yearValue, yearValue - 1, yearValue - 2];
+  const isHero = variant === "hero";
 
   return (
-    <div className="rounded-lg border border-stone-200 bg-white p-4">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div
+      className={
+        isHero ? "mt-6 w-full" : "w-full border-b border-border/70 bg-card px-4 py-3"
+      }
+    >
+      <div className="mx-auto max-w-4xl">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -46,71 +69,98 @@ export function EntityFilters({
             const input = form.querySelector<HTMLInputElement>('input[name="q"]');
             updateParams({ q: input?.value || undefined });
           }}
-          className="contents"
+          className="flex items-center gap-2 overflow-x-auto pb-1"
         >
-          <div>
-            <label className="block text-sm font-medium text-stone-700">
-              Pesquisa
-            </label>
-            <input
+          <div className="relative min-w-[320px] flex-1">
+            <Search className="absolute left-4 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="search"
               name="q"
               type="text"
-              placeholder="Nome da instituição..."
+              placeholder="Pesquisar instituição..."
               defaultValue={search}
-              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-900"
+              className={
+                isHero
+                  ? "h-10 rounded-full border-border/60 bg-background/85 pl-10 pr-28 shadow-none backdrop-blur"
+                  : "h-10 rounded-full border-border/70 bg-background pl-10 pr-28 shadow-none"
+              }
             />
+            <Button
+              type="submit"
+              size="sm"
+              className="absolute right-1.5 top-1/2 h-7 -translate-y-1/2"
+            >
+              Pesquisar
+            </Button>
           </div>
+
+          <Select
+            value={county ?? "__all__"}
+            onValueChange={(v) =>
+              updateParams({ county: v === "__all__" ? undefined : v })
+            }
+          >
+            <SelectTrigger className="h-9 w-[170px] rounded-full border-border/60 bg-background/80 text-sm shadow-none">
+              <SelectValue placeholder="Localidade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">Todas as localidades</SelectItem>
+              {counties.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={type ?? "__all__"}
+            onValueChange={(v) =>
+              updateParams({ type: v === "__all__" ? undefined : v })
+            }
+          >
+            <SelectTrigger className="h-9 w-[150px] rounded-full border-border/60 bg-background/80 text-sm shadow-none">
+              <SelectValue placeholder="Tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">Todos os tipos</SelectItem>
+              {types.map((t) => (
+                <SelectItem key={t} value={t}>
+                  {t}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={year ?? String(yearValue)}
+            onValueChange={(v) => updateParams({ year: v })}
+          >
+            <SelectTrigger className="h-9 w-[110px] rounded-full border-border/60 bg-background/80 text-sm shadow-none">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {yearOptions.map((y) => (
+                <SelectItem key={y} value={String(y)}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {hasActiveFilters && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <X className="size-3.5" />
+              Limpar
+            </Button>
+          )}
         </form>
-        <div>
-          <label className="block text-sm font-medium text-stone-700">
-            Localidade
-          </label>
-          <select
-            value={county ?? ""}
-            onChange={(e) => updateParams({ county: e.target.value || undefined })}
-            className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-900"
-          >
-            <option value="">Todos</option>
-            {counties.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-stone-700">
-            Tipo
-          </label>
-          <select
-            value={type ?? ""}
-            onChange={(e) => updateParams({ type: e.target.value || undefined })}
-            className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-900"
-          >
-            <option value="">Todos</option>
-            {types.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-stone-700">
-            Ano
-          </label>
-          <select
-            value={year ?? currentYear}
-            onChange={(e) => updateParams({ year: e.target.value })}
-            className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-900"
-          >
-            {[currentYear, currentYear - 1, currentYear - 2].map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
     </div>
   );

@@ -36,7 +36,7 @@ npm install
 npm run dev
 ```
 
-Aceda a [http://localhost:3000](http://localhost:3000). O backoffice está em `/backoffice` (requer login).
+Aceda a [http://localhost:3000](http://localhost:3000). O backoffice está em `/backoffice` (requer login). Em produção: [https://consigna-irs.vercel.app](https://consigna-irs.vercel.app).
 
 ## Upload de dados
 

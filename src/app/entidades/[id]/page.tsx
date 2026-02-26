@@ -2,6 +2,24 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CopyNifButton } from "@/components/CopyNifButton";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { PageTemplate } from "@/components/templates/PageTemplate";
+import {
+  MapPin,
+  Mail,
+  Phone,
+  Globe,
+  Building2,
+  FileText,
+} from "lucide-react";
 
 export default async function EntityDetailPage({
   params,
@@ -21,124 +39,187 @@ export default async function EntityDetailPage({
     notFound();
   }
 
-  const contacts = (entity.contacts as { email?: string; phone?: string; website?: string }) || {};
+  const contacts = (entity.contacts as {
+    email?: string;
+    phone?: string;
+    website?: string;
+  }) || {};
 
   return (
-    <div className="min-h-screen bg-stone-50">
-      <header className="border-b border-stone-200 bg-white">
-        <div className="mx-auto max-w-2xl px-4 py-6">
-          <Link
-            href="/entidades"
-            className="text-sm text-stone-500 hover:text-stone-700"
-          >
+    <PageTemplate
+      title={entity.name}
+      className="min-h-screen bg-muted/30"
+      headerWidth="narrow"
+      width="narrow"
+      topContent={
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/entidades" className="text-muted-foreground hover:text-foreground">
             ← Voltar à lista
           </Link>
-          <h1 className="mt-2 text-2xl font-semibold text-stone-900">
-            {entity.name}
-          </h1>
-          <div className="mt-2 flex items-center gap-2">
-            <span className="font-mono text-lg text-stone-700">{entity.nif}</span>
-            <CopyNifButton nif={entity.nif} />
-          </div>
+        </Button>
+      }
+      headerSurfaceVariant="solid"
+      bodyClassName="py-8"
+      withDivider={false}
+      headerChildren={
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="font-mono text-lg text-muted-foreground">
+            NIF {entity.nif}
+          </span>
+          <CopyNifButton nif={entity.nif} />
+          {entity.type && <Badge variant="secondary">{entity.type}</Badge>}
         </div>
-      </header>
-
-      <div className="mx-auto max-w-2xl px-4 py-8">
-        <div className="space-y-6">
-          <div className="rounded-lg border border-stone-200 bg-white p-6">
-            <h2 className="font-medium text-stone-900">Informação</h2>
-            <dl className="mt-3 space-y-2 text-sm">
-              {entity.county && (
-                <div>
-                  <dt className="text-stone-500">Localidade</dt>
-                  <dd className="text-stone-900">{entity.county}</dd>
-                </div>
-              )}
-              {entity.district && (
-                <div>
-                  <dt className="text-stone-500">Distrito</dt>
-                  <dd className="text-stone-900">{entity.district}</dd>
-                </div>
-              )}
-              {entity.type && (
-                <div>
-                  <dt className="text-stone-500">Tipo</dt>
-                  <dd className="text-stone-900">{entity.type}</dd>
-                </div>
-              )}
-            </dl>
-          </div>
-
-          {entity.description && (
-            <div className="rounded-lg border border-stone-200 bg-white p-6">
-              <h2 className="font-medium text-stone-900">Missão / Descrição</h2>
-              <p className="mt-2 text-stone-600">{entity.description}</p>
-            </div>
-          )}
-
-          {(contacts.email || contacts.phone || contacts.website || entity.address) && (
-            <div className="rounded-lg border border-stone-200 bg-white p-6">
-              <h2 className="font-medium text-stone-900">Contactos</h2>
-              <dl className="mt-3 space-y-2 text-sm">
-                {entity.address && (
-                  <div>
-                    <dt className="text-stone-500">Morada</dt>
-                    <dd className="text-stone-900">{entity.address}</dd>
+      }
+    >
+      <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="size-4" />
+                Informação
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid gap-3 sm:grid-cols-2">
+                {entity.county && (
+                  <div className="flex items-start gap-2">
+                    <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <div>
+                      <dt className="text-xs text-muted-foreground">
+                        Localidade
+                      </dt>
+                      <dd className="font-medium">{entity.county}</dd>
+                    </div>
                   </div>
                 )}
-                {contacts.email && (
-                  <div>
-                    <dt className="text-stone-500">Email</dt>
-                    <dd>
-                      <a
-                        href={`mailto:${contacts.email}`}
-                        className="text-emerald-600 hover:underline"
-                      >
-                        {contacts.email}
-                      </a>
-                    </dd>
+                {entity.district && (
+                  <div className="flex items-start gap-2">
+                    <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <div>
+                      <dt className="text-xs text-muted-foreground">
+                        Distrito
+                      </dt>
+                      <dd className="font-medium">{entity.district}</dd>
+                    </div>
                   </div>
                 )}
-                {contacts.phone && (
+                {entity.type && (
                   <div>
-                    <dt className="text-stone-500">Telefone</dt>
+                    <dt className="text-xs text-muted-foreground">Tipo</dt>
                     <dd>
-                      <a
-                        href={`tel:${contacts.phone}`}
-                        className="text-emerald-600 hover:underline"
-                      >
-                        {contacts.phone}
-                      </a>
-                    </dd>
-                  </div>
-                )}
-                {contacts.website && (
-                  <div>
-                    <dt className="text-stone-500">Site</dt>
-                    <dd>
-                      <a
-                        href={contacts.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-emerald-600 hover:underline"
-                      >
-                        {contacts.website}
-                      </a>
+                      <Badge variant="outline">{entity.type}</Badge>
                     </dd>
                   </div>
                 )}
               </dl>
-            </div>
+            </CardContent>
+          </Card>
+
+          {entity.description && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="size-4" />
+                  Missão / Descrição
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground leading-relaxed">
+                  {entity.description}
+                </p>
+              </CardContent>
+            </Card>
           )}
 
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-            <p className="text-sm text-emerald-800">
-              Use o NIPC acima para indicar esta instituição na sua declaração de
-              IRS no Portal das Finanças.
-            </p>
-          </div>
-        </div>
+          {(contacts.email ||
+            contacts.phone ||
+            contacts.website ||
+            entity.address) && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Contactos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <dl className="space-y-3">
+                  {entity.address && (
+                    <div className="flex items-start gap-2">
+                      <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                      <div>
+                        <dt className="text-xs text-muted-foreground">
+                          Morada
+                        </dt>
+                        <dd>{entity.address}</dd>
+                      </div>
+                    </div>
+                  )}
+                  {contacts.email && (
+                    <div className="flex items-start gap-2">
+                      <Mail className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                      <div>
+                        <dt className="text-xs text-muted-foreground">
+                          Email
+                        </dt>
+                        <dd>
+                          <a
+                            href={`mailto:${contacts.email}`}
+                            className="text-primary hover:underline"
+                          >
+                            {contacts.email}
+                          </a>
+                        </dd>
+                      </div>
+                    </div>
+                  )}
+                  {contacts.phone && (
+                    <div className="flex items-start gap-2">
+                      <Phone className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                      <div>
+                        <dt className="text-xs text-muted-foreground">
+                          Telefone
+                        </dt>
+                        <dd>
+                          <a
+                            href={`tel:${contacts.phone}`}
+                            className="text-primary hover:underline"
+                          >
+                            {contacts.phone}
+                          </a>
+                        </dd>
+                      </div>
+                    </div>
+                  )}
+                  {contacts.website && (
+                    <div className="flex items-start gap-2">
+                      <Globe className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                      <div>
+                        <dt className="text-xs text-muted-foreground">Site</dt>
+                        <dd>
+                          <a
+                            href={contacts.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            {contacts.website}
+                          </a>
+                        </dd>
+                      </div>
+                    </div>
+                  )}
+                </dl>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="pt-6">
+              <p className="text-sm text-primary">
+                Use o NIF acima para indicar esta instituição na sua declaração
+                de IRS no Portal das Finanças (Quadro 11 ou Dados Agregados IRS).
+              </p>
+            </CardContent>
+          </Card>
       </div>
-    </div>
+    </PageTemplate>
   );
 }

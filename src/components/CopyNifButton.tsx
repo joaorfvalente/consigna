@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface CopyNifButtonProps {
   nif: string;
+  compact?: boolean;
 }
 
-export function CopyNifButton({ nif }: CopyNifButtonProps) {
+export function CopyNifButton({ nif, compact = false }: CopyNifButtonProps) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -16,12 +18,18 @@ export function CopyNifButton({ nif }: CopyNifButtonProps) {
   }
 
   return (
-    <button
+    <Button
+      variant="ghost"
+      size={compact ? "xs" : "sm"}
       onClick={handleCopy}
-      className="rounded px-2 py-0.5 text-xs font-medium text-emerald-600 hover:bg-emerald-50"
+      className={
+        compact
+          ? "h-7 px-2 text-muted-foreground hover:text-foreground"
+          : "min-h-[44px] min-w-[44px] text-muted-foreground hover:text-foreground"
+      }
       title="Copiar NIPC"
     >
       {copied ? "Copiado!" : "Copiar"}
-    </button>
+    </Button>
   );
 }
