@@ -1,29 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import type { Entity } from "@/types/entity";
 import Link from "next/link";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  DataTable,
-  DataTableBody,
-  DataTableCell,
-  DataTableEmptyState,
-  DataTableHead,
-  DataTableHeader,
-  DataTableRow,
-} from "@/components/ui/data-table";
-import { Button } from "@/components/ui/button";
-import { PageTemplate } from "@/components/templates/PageTemplate";
+import { Button, Card, CardBody, Input } from "@heroui/react";
+import { createClient } from "@/lib/supabase/client";
 import { FISCAL_YEAR_OPTIONS } from "@/lib/constants";
+import type { Entity } from "@/types/entity";
 
 export default function BackofficeEntidadesPage() {
   const [entities, setEntities] = useState<Entity[]>([]);
@@ -33,102 +15,46 @@ export default function BackofficeEntidadesPage() {
 
   useEffect(() => {
     async function fetchEntities() {
+      setLoading(true);
       const supabase = createClient();
-      let query = supabase
-        .from("entities")
-        .select("*")
-        .eq("year", year)
-        .order("name");
-
-      if (search.trim()) {
-        query = query.ilike("name", `%${search.trim()}%`);
-      }
-
+      let query = supabase.from("entities").select("*").eq("year", year).order("name");
+      if (search.trim()) query = query.ilike("name", `%${search.trim()}%`);
       const { data, error } = await query.limit(100);
-
-      if (error) {
-        console.error(error);
-        setEntities([]);
-      } else {
-        setEntities(data || []);
-      }
+      if (error) setEntities([]); else setEntities(data ?? []);
       setLoading(false);
     }
-
     fetchEntities();
-  }, [year, search]);
+  }, [search, year]);
 
   return (
-    <PageTemplate
-      title="Entidades"
-      description="Gerir e enriquecer dados das entidades elegíveis"
-    >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <Input
-          type="text"
-          placeholder="Pesquisar por nome..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="sm:w-72"
-        />
-        <Select
-          value={String(year)}
-          onValueChange={(value) => setYear(parseInt(value, 10))}
-        >
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Ano" />
-          </SelectTrigger>
-          <SelectContent>
-            {FISCAL_YEAR_OPTIONS.map((fiscalYear) => (
-              <SelectItem key={fiscalYear} value={String(fiscalYear)}>
-                {fiscalYear}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+    <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8">
+      <header><h1 className="text-3xl font-semibold text-slate-900">Entidades</h1><p className="text-slate-600">Gestao de entidades elegiveis.</p></header>
+      <div className="flex flex-wrap gap-3">
+        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Pesquisar por nome" className="max-w-sm" />
+        <select value={String(year)} onChange={(e) => setYear(parseInt(e.target.value, 10))} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm">
+          {FISCAL_YEAR_OPTIONS.map((item) => <option key={item} value={String(item)}>{item}</option>)}
+        </select>
       </div>
 
-      {loading ? (
-        <p className="text-muted-foreground">A carregar…</p>
-      ) : (
-        <DataTable>
-          <DataTableHeader>
-            <DataTableRow>
-              <DataTableHead>NIPC</DataTableHead>
-              <DataTableHead>Nome</DataTableHead>
-              <DataTableHead>Localidade</DataTableHead>
-              <DataTableHead>Tipo</DataTableHead>
-              <DataTableHead>Ações</DataTableHead>
-            </DataTableRow>
-          </DataTableHeader>
-          <DataTableBody>
-            {entities.map((e) => (
-              <DataTableRow key={e.id}>
-                <DataTableCell className="font-mono text-muted-foreground">
-                  {e.nif}
-                </DataTableCell>
-                <DataTableCell>{e.name}</DataTableCell>
-                <DataTableCell className="text-muted-foreground">
-                  {e.county ?? "-"}
-                </DataTableCell>
-                <DataTableCell className="text-muted-foreground">
-                  {e.type ?? "-"}
-                </DataTableCell>
-                <DataTableCell>
-                  <Button asChild variant="link" size="sm" className="h-auto px-0">
-                    <Link href={`/backoffice/entidades/${e.id}`}>Editar</Link>
-                  </Button>
-                </DataTableCell>
-              </DataTableRow>
-            ))}
-            {entities.length === 0 && (
-              <DataTableEmptyState colSpan={5}>
-                Nenhuma entidade encontrada. Faça upload de um CSV primeiro.
-              </DataTableEmptyState>
-            )}
-          </DataTableBody>
-        </DataTable>
-      )}
-    </PageTemplate>
+      <Card>
+        <CardBody className="overflow-x-auto p-0">
+          {loading ? <p className="p-4 text-slate-500">A carregar...</p> : (
+            <table className="min-w-full text-sm">
+              <thead className="border-b border-slate-200 bg-slate-50 text-left text-slate-500"><tr><th className="px-4 py-3">NIF</th><th className="px-4 py-3">Nome</th><th className="px-4 py-3">Localidade</th><th className="px-4 py-3">Acoes</th></tr></thead>
+              <tbody>
+                {entities.map((entity) => (
+                  <tr key={entity.id} className="border-b border-slate-100">
+                    <td className="px-4 py-3 font-mono text-slate-500">{entity.nif}</td>
+                    <td className="px-4 py-3">{entity.name}</td>
+                    <td className="px-4 py-3 text-slate-500">{entity.county ?? "-"}</td>
+                    <td className="px-4 py-3"><Button as={Link} href={`/backoffice/entidades/${entity.id}`} variant="light" size="sm">Editar</Button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </CardBody>
+      </Card>
+    </main>
   );
 }

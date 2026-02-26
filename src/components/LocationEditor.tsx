@@ -1,88 +1,59 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { searchAddress } from "@/lib/geocoding";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button, Input } from "@heroui/react";
 
-interface LocationEditorProps {
-  address: string;
-  latitude: number | null;
-  longitude: number | null;
-  onAddressChange: (address: string) => void;
-  onLocationChange: (lat: number, lng: number) => void;
-}
-
-export function LocationEditor({
-  address,
-  latitude,
-  longitude,
-  onAddressChange,
-  onLocationChange,
-}: LocationEditorProps) {
+export function LocationEditor({ address, latitude, longitude, onAddressChange, onLocationChange }: { address: string; latitude: number | null; longitude: number | null; onAddressChange: (address: string) => void; onLocationChange: (lat: number, lng: number) => void; }) {
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const fetchSuggestions = useCallback(async (q: string) => {
-    if (q.length < 3) {
+  const fetchSuggestions = useCallback(async (value: string) => {
+    if (value.length < 3) {
       setSuggestions([]);
       return;
     }
     setLoading(true);
     try {
-      const results = await searchAddress(q, { countrycodes: "pt", limit: 5 });
-      setSuggestions(results);
+      setSuggestions(await searchAddress(value, { countrycodes: "pt", limit: 5 }));
     } finally {
       setLoading(false);
     }
   }, []);
 
-  function handleInputChange(value: string) {
+  function handleChange(value: string) {
     setQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => fetchSuggestions(value), 400);
+    debounceRef.current = setTimeout(() => fetchSuggestions(value), 350);
   }
 
-  function selectSuggestion(s: { display_name: string; lat: string; lon: string }) {
-    onAddressChange(s.display_name);
-    onLocationChange(parseFloat(s.lat), parseFloat(s.lon));
+  function selectSuggestion(item: { display_name: string; lat: string; lon: string }) {
+    onAddressChange(item.display_name);
+    onLocationChange(parseFloat(item.lat), parseFloat(item.lon));
     setQuery("");
     setSuggestions([]);
   }
 
   return (
-    <div className="mt-2 space-y-2">
-      <Input
-        type="text"
-        placeholder="Pesquisar morada (ex: Rua das Flores, Lisboa)..."
-        value={query !== "" ? query : address}
-        onChange={(e) => handleInputChange(e.target.value)}
-      />
-      {loading && <p className="text-sm text-muted-foreground">A pesquisar…</p>}
+    <div className="space-y-2">
+      <Input value={query !== "" ? query : address} onChange={(e) => handleChange(e.target.value)} placeholder="Pesquisar morada (Portugal)" />
+      {loading && <p className="text-sm text-slate-500">A pesquisar...</p>}
+
       {suggestions.length > 0 && (
-        <ul className="rounded-lg border bg-card py-1 shadow-sm">
-          {suggestions.map((s, i) => (
-            <li key={i}>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => selectSuggestion(s)}
-                className="h-auto w-full justify-start px-3 py-2 text-left text-sm whitespace-normal"
-              >
-                {s.display_name}
+        <ul className="rounded-xl border border-slate-200 bg-white p-1">
+          {suggestions.map((item) => (
+            <li key={`${item.lat}-${item.lon}`}>
+              <Button type="button" variant="light" size="sm" onPress={() => selectSuggestion(item)} className="h-auto w-full justify-start py-2 text-left">
+                {item.display_name}
               </Button>
             </li>
           ))}
         </ul>
       )}
-      {address && (latitude != null || longitude != null) && (
-        <p className="text-sm text-muted-foreground">
-          Localização definida. Coordenadas guardadas automaticamente.
-        </p>
-      )}
+
+      {address && (latitude != null || longitude != null) && <p className="text-sm text-slate-500">Localizacao definida para o mapa.</p>}
     </div>
   );
 }

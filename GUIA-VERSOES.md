@@ -69,6 +69,59 @@ git checkout main
 - Fazes merge para `main` apenas quando estiver pronto
 - O deploy de produção deve sair da `main`
 
+## Como ver alterações e testar (passo a passo)
+
+### 1) Confirmar que estás na versão de testes
+
+```bash
+git checkout feat/heroui-experiment
+git branch --show-current
+```
+
+Deve aparecer `feat/heroui-experiment`.
+
+### 2) Ver as alterações que fizeste
+
+```bash
+git status
+git diff
+```
+
+- `git status` mostra os ficheiros alterados
+- `git diff` mostra o detalhe do que mudou
+
+### 3) Testar localmente (como utilizador)
+
+```bash
+npm run dev
+```
+
+Depois abre no browser:
+
+- `http://localhost:3000/`
+- `http://localhost:3000/entidades`
+- `http://localhost:3000/backoffice/login`
+
+Quando terminares, no terminal carrega `Ctrl + C` para parar.
+
+### 4) Teste técnico antes de publicar
+
+```bash
+npm run build
+```
+
+Se este comando terminar sem erros, a app está preparada para deploy.
+
+### 5) Guardar alterações que já estejam boas
+
+```bash
+git add .
+git commit -m "mensagem simples do que mudaste"
+git push
+```
+
+Dica: faz commits pequenos e frequentes para ser mais fácil voltar atrás se precisares.
+
 ## Checklist rápida antes de mexer
 
 - [ ] Confirmar branch atual com `git branch --show-current`

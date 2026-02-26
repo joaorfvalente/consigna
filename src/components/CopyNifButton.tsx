@@ -1,35 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@heroui/react";
 
-interface CopyNifButtonProps {
-  nif: string;
-  compact?: boolean;
-}
-
-export function CopyNifButton({ nif, compact = false }: CopyNifButtonProps) {
+export function CopyNifButton({ nif, compact = false }: { nif: string; compact?: boolean }) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
     await navigator.clipboard.writeText(nif);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 1500);
   }
 
   return (
-    <Button
-      variant="ghost"
-      size={compact ? "xs" : "sm"}
-      onClick={handleCopy}
-      className={
-        compact
-          ? "h-7 px-2 text-muted-foreground hover:text-foreground"
-          : "min-h-[44px] min-w-[44px] text-muted-foreground hover:text-foreground"
-      }
-      title="Copiar NIPC"
-    >
-      {copied ? "Copiado!" : "Copiar"}
+    <Button size={compact ? "sm" : "md"} variant={copied ? "solid" : "flat"} color={copied ? "success" : "default"} onPress={handleCopy}>
+      {copied ? "Copiado" : "Copiar NIF"}
     </Button>
   );
 }

@@ -1,28 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
+import { Button, Card, CardBody, CardHeader, Input } from "@heroui/react";
 import { createClient } from "@/lib/supabase/client";
 import { parseCSV, parseCSVPreview } from "@/lib/csv-parser";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PageTemplate } from "@/components/templates/PageTemplate";
-import {
-  DataTable,
-  DataTableBody,
-  DataTableCell,
-  DataTableHead,
-  DataTableHeader,
-  DataTableRow,
-} from "@/components/ui/data-table";
 import { FISCAL_YEAR_OPTIONS } from "@/lib/constants";
 
 export default function UploadPage() {
@@ -32,62 +13,31 @@ export default function UploadPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ imported: number; errors: string[] } | null>(null);
 
-  const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const f = e.target.files?.[0];
-      setFile(f || null);
-      setPreview(null);
-      setResult(null);
-
-      if (f) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const content = reader.result as string;
-          const { entities, headers, errors, totalCount } = parseCSVPreview(content, year);
-          setPreview({ entities, headers, errors, totalCount });
-        };
-        reader.readAsText(f, "UTF-8");
-      }
-    },
-    [year]
-  );
-
-  const handleYearChange = (value: string) => {
-    const y = parseInt(value, 10);
-    setYear(y);
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const content = reader.result as string;
-        const { entities, headers, errors, totalCount } = parseCSVPreview(content, y);
-        setPreview({ entities, headers, errors, totalCount });
-      };
-      reader.readAsText(file, "UTF-8");
-    }
-  };
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0] ?? null;
+    setFile(selected);
+    setResult(null);
+    setPreview(null);
+    if (!selected) return;
+    const reader = new FileReader();
+    reader.onload = () => setPreview(parseCSVPreview(reader.result as string, year));
+    reader.readAsText(selected, "UTF-8");
+  }, [year]);
 
   async function handleImport() {
     if (!file || !preview || preview.totalCount === 0) return;
-
     setLoading(true);
     setResult(null);
 
-    const content = await file.text();
-    const { entities, errors } = parseCSV(content, year);
-
+    const { entities, errors } = parseCSV(await file.text(), year);
     const supabase = createClient();
     let imported = 0;
     const importErrors: string[] = [];
 
     for (const entity of entities) {
-      const { error } = await supabase.from("entities").upsert(entity, {
-        onConflict: "nif,year",
-      });
-      if (error) {
-        importErrors.push(`${entity.nif}: ${error.message}`);
-      } else {
-        imported++;
-      }
+      const { error } = await supabase.from("entities").upsert(entity, { onConflict: "nif,year" });
+      if (error) importErrors.push(`${entity.nif}: ${error.message}`);
+      else imported += 1;
     }
 
     setResult({ imported, errors: [...errors, ...importErrors] });
@@ -95,113 +45,46 @@ export default function UploadPage() {
   }
 
   return (
-    <PageTemplate
-      title="Upload CSV"
-      description="Importar lista de entidades elegíveis do Portal das Finanças"
-      className="space-y-8"
-    >
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <Label>Ano fiscal</Label>
-          <Select
-            value={String(year)}
-            onValueChange={handleYearChange}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {FISCAL_YEAR_OPTIONS.map((fiscalYear) => (
-                <SelectItem key={fiscalYear} value={String(fiscalYear)}>
-                  {fiscalYear}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+    <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 sm:py-10">
+      <Card shadow="sm" className="border border-slate-200/70 bg-white/90">
+        <CardBody className="gap-2 p-6 sm:p-8">
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">Upload CSV</h1>
+          <p className="text-slate-600">Importe a lista oficial de entidades elegíveis.</p>
+        </CardBody>
+      </Card>
+
+      <div className="space-y-2 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+        <label htmlFor="year" className="text-sm font-medium text-slate-700">Ano fiscal</label>
+        <select id="year" value={String(year)} onChange={(e) => setYear(parseInt(e.target.value, 10))} className="h-11 w-[170px] rounded-xl border border-slate-200 bg-white px-3 text-sm shadow-sm">
+          {FISCAL_YEAR_OPTIONS.map((item) => <option key={item} value={String(item)}>{item}</option>)}
+        </select>
 
         <div className="space-y-2">
-          <Label>Ficheiro CSV</Label>
-          <Input
-            type="file"
-            accept=".csv,.txt"
-            onChange={handleFileChange}
-            className="file:bg-primary/10 file:text-primary file:border-0 file:rounded-md file:px-4 file:py-2"
-          />
-          <p className="text-xs text-muted-foreground">
-            Colunas esperadas: NIPC, Nome, Localidade
-          </p>
+        <label htmlFor="csv" className="text-sm font-medium text-slate-700">Ficheiro</label>
+        <Input id="csv" type="file" accept=".csv,.txt" onChange={handleFileChange} />
         </div>
-
-        {preview && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Pré-visualização</CardTitle>
-              {preview.errors.length > 0 && (
-                <div className="text-sm text-destructive">
-                  {preview.errors.map((e, i) => (
-                    <p key={i}>{e}</p>
-                  ))}
-                </div>
-              )}
-              <CardDescription>
-                {preview.totalCount.toLocaleString("pt-PT")} entidades encontradas
-                {preview.totalCount > preview.entities.length && (
-                  <span> (a mostrar {preview.entities.length})</span>
-                )}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="max-h-60 overflow-auto">
-                <DataTable>
-                  <DataTableHeader>
-                    <DataTableRow>
-                      {preview.headers.slice(0, 5).map((h, i) => (
-                        <DataTableHead key={i}>{h}</DataTableHead>
-                      ))}
-                    </DataTableRow>
-                  </DataTableHeader>
-                  <DataTableBody>
-                    {(preview.entities as { nif: string; name: string; county?: string }[])
-                      .slice(0, 10)
-                      .map((e, i) => (
-                        <DataTableRow key={i}>
-                          <DataTableCell>{e.nif}</DataTableCell>
-                          <DataTableCell>{e.name}</DataTableCell>
-                          <DataTableCell>{e.county ?? "-"}</DataTableCell>
-                        </DataTableRow>
-                      ))}
-                  </DataTableBody>
-                </DataTable>
-              </div>
-              <Button onClick={handleImport} disabled={loading}>
-                {loading ? "A importar…" : "Importar"}
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {result && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Resultado</CardTitle>
-              <CardDescription>
-                {result.imported} entidades importadas
-              </CardDescription>
-              {result.errors.length > 0 && (
-                <div className="max-h-32 overflow-auto text-sm text-destructive">
-                  {result.errors.slice(0, 5).map((e, i) => (
-                    <p key={i}>{e}</p>
-                  ))}
-                  {result.errors.length > 5 && (
-                    <p>… e mais {result.errors.length - 5} erros</p>
-                  )}
-                </div>
-              )}
-            </CardHeader>
-          </Card>
-        )}
       </div>
-    </PageTemplate>
+
+      {preview && (
+        <Card shadow="sm" className="border border-slate-200/70">
+          <CardHeader className="flex flex-col items-start gap-1">
+            <h2 className="text-base font-semibold text-slate-900">Pré-visualização</h2>
+            <p className="text-sm text-slate-500">{preview.totalCount.toLocaleString("pt-PT")} entidades encontradas</p>
+          </CardHeader>
+          <CardBody className="gap-4">
+            <Button onPress={handleImport} color="primary" radius="full" isDisabled={loading}>{loading ? "A importar..." : "Importar"}</Button>
+          </CardBody>
+        </Card>
+      )}
+
+      {result && (
+        <Card shadow="sm" className="border border-slate-200/70">
+          <CardHeader className="flex flex-col items-start gap-1"><h2 className="text-base font-semibold text-slate-900">Resultado</h2><p className="text-sm text-slate-500">{result.imported} entidades importadas</p></CardHeader>
+          {result.errors.length > 0 && (
+            <CardBody><div className="text-sm text-danger">{result.errors.slice(0,10).map((item, idx) => <p key={idx}>{item}</p>)}</div></CardBody>
+          )}
+        </Card>
+      )}
+    </main>
   );
 }

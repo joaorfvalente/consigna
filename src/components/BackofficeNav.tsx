@@ -2,66 +2,51 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { LAYOUT_CONTAINER_WIDTH } from "@/components/templates/layout-widths";
+import { Button, Navbar, NavbarBrand, NavbarContent, NavbarItem } from "@heroui/react";
 
-interface BackofficeNavProps {
-  preview?: boolean;
-  className?: string;
-}
+const links = [
+  { href: "/backoffice", label: "Dashboard" },
+  { href: "/backoffice/upload", label: "Upload" },
+  { href: "/backoffice/entidades", label: "Entidades" },
+  { href: "/backoffice/componentes", label: "Componentes" },
+];
 
-export function BackofficeNav({ preview = false, className }: BackofficeNavProps) {
+export function BackofficeNav() {
   const pathname = usePathname();
-  const links = [
-    { href: "/backoffice", label: "Dashboard" },
-    { href: "/backoffice/upload", label: "Upload CSV" },
-    { href: "/backoffice/entidades", label: "Entidades" },
-    { href: "/backoffice/componentes", label: "Componentes" },
-  ];
-
   return (
-    <nav
-      className={cn(
-        preview
-          ? "rounded-xl border border-border/20 bg-background/90 backdrop-blur"
-          : "border-b border-border/20 bg-background/90 backdrop-blur",
-        className
-      )}
-    >
-      <div className={cn("mx-auto px-4", LAYOUT_CONTAINER_WIDTH.nav)}>
-        <div className="flex min-h-14 flex-col gap-3 py-3 sm:h-14 sm:flex-row sm:items-center sm:justify-between sm:py-0">
-          <div className="flex flex-wrap items-center gap-2">
-            {links.map((link) => {
-              const isActive =
-                link.href === "/backoffice"
-                  ? pathname === link.href
-                  : pathname?.startsWith(link.href);
-              return (
-                <Button
-                  key={link.href}
-                  asChild
-                  variant="ghost"
-                  size="sm"
-                  className={isActive ? "px-2 text-foreground" : "px-2 text-muted-foreground hover:text-foreground"}
-                >
-                  <Link href={link.href}>{link.label}</Link>
-                </Button>
-              );
-            })}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="sm" className="px-2 text-muted-foreground hover:text-foreground">
-              <Link href="/">Ver site</Link>
-            </Button>
-            <form action="/backoffice/logout" method="post">
-              <Button type="submit" variant="ghost" size="sm">
-                Sair
+    <Navbar maxWidth="2xl" isBordered className="bg-white/85 backdrop-blur-md">
+      <NavbarBrand>
+        <Link href="/backoffice" className="text-base font-semibold tracking-tight text-slate-900">
+          Backoffice
+        </Link>
+      </NavbarBrand>
+      <NavbarContent justify="center" className="hidden gap-2 lg:flex">
+        {links.map((link) => {
+          const isActive = link.href === "/backoffice" ? pathname === link.href : pathname?.startsWith(link.href);
+          return (
+            <NavbarItem key={link.href}>
+              <Button
+                as={Link}
+                href={link.href}
+                size="md"
+                radius="full"
+                color={isActive ? "primary" : "default"}
+                variant={isActive ? "solid" : "light"}
+                className={isActive ? "shadow-sm" : ""}
+              >
+                {link.label}
               </Button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </nav>
+            </NavbarItem>
+          );
+        })}
+      </NavbarContent>
+      <NavbarContent justify="end">
+        <NavbarItem>
+          <Button as={Link} href="/" variant="light" size="md" radius="full">
+            Ver site
+          </Button>
+        </NavbarItem>
+      </NavbarContent>
+    </Navbar>
   );
 }

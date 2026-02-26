@@ -1,94 +1,55 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { createClient } from "@/lib/supabase/client";
+import { Button, Card, CardBody, CardHeader, Input } from "@heroui/react";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const router = useRouter();
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+    setLoading(true);
 
     try {
       const supabase = createClient();
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) {
-        const msg =
-          signInError.message === "Failed to fetch"
-            ? "Não foi possível ligar ao Supabase. Verifica se o projeto está ativo no dashboard (projetos gratuitos pausam após inatividade) e a tua ligação à internet."
-            : signInError.message;
-        setError(msg);
+        setError(signInError.message);
         return;
       }
-
       router.push("/backoffice");
       router.refresh();
     } catch (err) {
-      const msg =
-        err instanceof Error && err.message === "Failed to fetch"
-          ? "Não foi possível ligar ao Supabase. Verifica se o projeto está ativo no dashboard (projetos gratuitos pausam após inatividade) e a tua ligação à internet."
-          : err instanceof Error
-            ? err.message
-            : "Ocorreu um erro inesperado.";
-      setError(msg);
+      setError(err instanceof Error ? err.message : "Erro inesperado");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="flex min-h-[60vh] items-center justify-center">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-xl">Entrar</CardTitle>
-          <CardDescription>Acesso ao backoffice de gestão</CardDescription>
+    <div className="mx-auto flex min-h-[70vh] w-full max-w-6xl items-center justify-center px-4">
+      <Card shadow="sm" className="w-full max-w-sm border border-slate-200/70 bg-white/90">
+        <CardHeader className="flex flex-col items-start gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Entrar no backoffice</h1>
+          <p className="text-sm text-slate-500">Use as suas credenciais para continuar.</p>
         </CardHeader>
-        <CardContent>
+        <CardBody>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? "A entrar…" : "Entrar"}
+            <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Input label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            {error && <p className="text-sm text-danger">{error}</p>}
+            <Button type="submit" color="primary" radius="full" isDisabled={loading} className="w-full">
+              {loading ? "A entrar..." : "Entrar"}
             </Button>
           </form>
-        </CardContent>
+        </CardBody>
       </Card>
     </div>
   );

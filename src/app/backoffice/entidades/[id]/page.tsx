@@ -2,24 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { Button, Card, CardBody, CardHeader, Input, Textarea } from "@heroui/react";
 import { createClient } from "@/lib/supabase/client";
 import type { Entity, EntityContacts } from "@/types/entity";
 import { LocationEditor } from "@/components/LocationEditor";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { PageTemplate } from "@/components/templates/PageTemplate";
-import { Textarea } from "@/components/ui/textarea";
 
 export default function EditEntityPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
+
   const [entity, setEntity] = useState<Entity | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
   const [description, setDescription] = useState("");
   const [contacts, setContacts] = useState<EntityContacts>({});
   const [address, setAddress] = useState("");
@@ -29,155 +24,57 @@ export default function EditEntityPage() {
   useEffect(() => {
     async function fetchEntity() {
       const supabase = createClient();
-      const { data, error } = await supabase
-        .from("entities")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (error || !data) {
-        setEntity(null);
-        setLoading(false);
-        return;
-      }
-
+      const { data } = await supabase.from("entities").select("*").eq("id", id).single();
+      if (!data) { setLoading(false); return; }
       setEntity(data);
-      setDescription(data.description || "");
-      setContacts((data.contacts as EntityContacts) || {});
-      setAddress(data.address || "");
+      setDescription(data.description ?? "");
+      setContacts((data.contacts as EntityContacts) ?? {});
+      setAddress(data.address ?? "");
       setLatitude(data.latitude);
       setLongitude(data.longitude);
       setLoading(false);
     }
-
     fetchEntity();
   }, [id]);
 
   async function handleSave() {
     if (!entity) return;
-
     setSaving(true);
     const supabase = createClient();
-    const { error } = await supabase
-      .from("entities")
-      .update({
-        description: description || null,
-        contacts: Object.keys(contacts).length ? contacts : null,
-        address: address || null,
-        latitude,
-        longitude,
-      })
-      .eq("id", id);
-
+    await supabase.from("entities").update({ description: description || null, contacts: Object.keys(contacts).length ? contacts : null, address: address || null, latitude, longitude }).eq("id", id);
     setSaving(false);
-    if (!error) {
-      router.refresh();
-    }
+    router.refresh();
   }
 
-  if (loading || !entity) {
-    return <p className="text-muted-foreground">A carregar…</p>;
-  }
-
-  const originalName = entity.original_name ?? entity.name;
-  const originalCounty = entity.original_county ?? entity.county;
+  if (loading || !entity) return <p className="mx-auto max-w-6xl px-4 py-8 text-slate-500">A carregar...</p>;
 
   return (
-    <PageTemplate
-      title={entity.name}
-      description="Enriquecer descrição, contactos e localização"
-      className="space-y-6"
-    >
+    <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8">
+      <header><h1 className="text-3xl font-semibold text-slate-900">{entity.name}</h1><p className="text-slate-600">Edicao de dados da entidade.</p></header>
+
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Valores originais (CSV)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <dl className="space-y-2 text-sm">
-            <div>
-              <dt className="text-muted-foreground">NIPC</dt>
-              <dd className="font-mono">{entity.nif}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Nome</dt>
-              <dd>{originalName}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Localidade</dt>
-              <dd>{originalCounty || "—"}</dd>
-            </div>
-          </dl>
-        </CardContent>
+        <CardHeader className="text-base font-semibold">Dados base</CardHeader>
+        <CardBody className="space-y-2 text-sm">
+          <p><strong>NIF:</strong> <span className="font-mono">{entity.nif}</span></p>
+          <p><strong>Nome:</strong> {entity.original_name ?? entity.name}</p>
+          <p><strong>Localidade:</strong> {entity.original_county ?? entity.county ?? "-"}</p>
+        </CardBody>
       </Card>
 
-      <div className="space-y-6">
-        <div>
-          <Label>
-            Descrição / Missão
-          </Label>
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={4}
-            className="mt-2"
-          />
-        </div>
+      <Textarea label="Descricao" value={description} onChange={(e) => setDescription(e.target.value)} minRows={4} />
 
-        <div>
-          <Label>
-            Contactos
-          </Label>
-          <div className="mt-2 space-y-2">
-            <Input
-              type="email"
-              placeholder="Email"
-              value={contacts.email || ""}
-              onChange={(e) =>
-                setContacts((c) => ({ ...c, email: e.target.value || undefined }))
-              }
-            />
-            <Input
-              type="tel"
-              placeholder="Telefone"
-              value={contacts.phone || ""}
-              onChange={(e) =>
-                setContacts((c) => ({ ...c, phone: e.target.value || undefined }))
-              }
-            />
-            <Input
-              type="url"
-              placeholder="Site"
-              value={contacts.website || ""}
-              onChange={(e) =>
-                setContacts((c) => ({ ...c, website: e.target.value || undefined }))
-              }
-            />
-          </div>
-        </div>
-
-        <div>
-          <Label>
-            Localização (para mapa)
-          </Label>
-          <LocationEditor
-            address={address}
-            latitude={latitude}
-            longitude={longitude}
-            onAddressChange={setAddress}
-            onLocationChange={(lat, lng) => {
-              setLatitude(lat);
-              setLongitude(lng);
-            }}
-          />
-        </div>
-
-        <Button
-          onClick={handleSave}
-          disabled={saving}
-        >
-          {saving ? "A guardar…" : "Guardar"}
-        </Button>
+      <div className="grid gap-3 md:grid-cols-3">
+        <Input label="Email" value={contacts.email ?? ""} onChange={(e) => setContacts((prev) => ({ ...prev, email: e.target.value || undefined }))} />
+        <Input label="Telefone" value={contacts.phone ?? ""} onChange={(e) => setContacts((prev) => ({ ...prev, phone: e.target.value || undefined }))} />
+        <Input label="Website" value={contacts.website ?? ""} onChange={(e) => setContacts((prev) => ({ ...prev, website: e.target.value || undefined }))} />
       </div>
-    </PageTemplate>
+
+      <div>
+        <p className="mb-2 text-sm font-medium text-slate-700">Localizacao</p>
+        <LocationEditor address={address} latitude={latitude} longitude={longitude} onAddressChange={setAddress} onLocationChange={(lat, lng) => { setLatitude(lat); setLongitude(lng); }} />
+      </div>
+
+      <Button color="primary" onPress={handleSave} isDisabled={saving}>{saving ? "A guardar..." : "Guardar"}</Button>
+    </main>
   );
 }
