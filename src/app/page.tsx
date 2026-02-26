@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { FAQ } from "@/components/FAQ";
+import { HeroUiPreview } from "@/components/HeroUiPreview";
 import { Search, MapPin } from "lucide-react";
 
 export default function HomePage() {
@@ -40,6 +41,8 @@ export default function HomePage() {
       <div className="w-full border-t border-border" />
 
       <FAQ />
+
+      <HeroUiPreview />
 
       <div className="mx-auto max-w-4xl px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
