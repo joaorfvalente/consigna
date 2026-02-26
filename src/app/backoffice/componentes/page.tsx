@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense } from "react";
 import { ChevronRight, MapPin, Search } from "lucide-react";
 import { MainNav } from "@/components/MainNav";
 import { BackofficeNav } from "@/components/BackofficeNav";
@@ -209,24 +210,28 @@ export default function ComponentesPage() {
                 </div>
               </div>
               <div className="space-y-4">
-                <EntityFilters
-                  search=""
-                  county={undefined}
-                  type={undefined}
-                  year={String(new Date().getFullYear())}
-                  counties={["Lisboa", "Porto", "Coimbra"]}
-                  types={["Solidariedade social", "Ambiental", "Cultural"]}
-                  variant="hero"
-                />
-                <EntityFilters
-                  search="fundação"
-                  county="Lisboa"
-                  type="Ambiental"
-                  year={String(new Date().getFullYear())}
-                  counties={["Lisboa", "Porto", "Coimbra"]}
-                  types={["Solidariedade social", "Ambiental", "Cultural"]}
-                  variant="default"
-                />
+                <Suspense fallback={<div className="h-10 rounded-md bg-muted/40" />}>
+                  <EntityFilters
+                    search=""
+                    county={undefined}
+                    type={undefined}
+                    year={String(new Date().getFullYear())}
+                    counties={["Lisboa", "Porto", "Coimbra"]}
+                    types={["Solidariedade social", "Ambiental", "Cultural"]}
+                    variant="hero"
+                  />
+                </Suspense>
+                <Suspense fallback={<div className="h-10 rounded-md bg-muted/40" />}>
+                  <EntityFilters
+                    search="fundação"
+                    county="Lisboa"
+                    type="Ambiental"
+                    year={String(new Date().getFullYear())}
+                    counties={["Lisboa", "Porto", "Coimbra"]}
+                    types={["Solidariedade social", "Ambiental", "Cultural"]}
+                    variant="default"
+                  />
+                </Suspense>
               </div>
             </div>
           </section>
